@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/auth/logout
+description: Logout sesi ini. Pakai {{adminRefreshToken}} hasil login.
+url: "{{baseUrl}}/api/auth/logout"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "refreshToken": "{{adminRefreshToken}}"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "refreshToken"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-auth-logout.resources/examples
+order: 1000

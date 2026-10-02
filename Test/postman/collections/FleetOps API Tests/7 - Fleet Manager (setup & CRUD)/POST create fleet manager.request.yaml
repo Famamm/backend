@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/fleet-managers"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: ZZ Fleet Manager Tes
+    - type: text
+      key: Address
+      value: Surabaya
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('dapat username', () => pm.expect(d.username).to.be.a('string'));
+      pm.test('dapat generatedPassword', () => pm.expect(d.generatedPassword).to.be.a('string'));
+      pm.environment.set('fleetManagerUser', d.username);
+      pm.environment.set('fleetManagerPass', d.generatedPassword);
+      pm.environment.set('tmpFleetManagerUserId', d.userId);
+    language: text/javascript
+order: 2000

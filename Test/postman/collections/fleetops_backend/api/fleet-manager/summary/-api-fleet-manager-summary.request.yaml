@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/fleet-manager/summary
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/summary"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-summary.resources/examples
+order: 1000

@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/admin/dashboard/me
+description: ""
+url: "{{baseUrl}}/api/admin/dashboard/me"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-dashboard-me.resources/examples
+order: 1000

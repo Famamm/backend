@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/trips"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "driverId": {{loggedDriverId}},
+      "vehicleId": {{vehicleId}},
+      "lokasiAwal": "Pasuruan",
+      "kordAwalLatitude": -7.6,
+      "kordAwalLongitude": 112.9,
+      "odometerAwal": 15000
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('status Ongoing', () => pm.expect(d.status).to.eql('Ongoing'));
+      pm.environment.set('tmpTripId', d.id);
+    language: text/javascript
+order: 7000

@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/trips/live-locations"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const b = pm.response.json();
+      pm.test('count cocok dengan jumlah data', () => pm.expect(b.data.length).to.eql(b.count));
+      // Trip tes sudah di-cancel di folder 6, jadi umumnya count 0 di sini.
+      // Assertion isi hanya dijalankan kalau kebetulan ada trip Ongoing lain.
+      if (b.count > 0) {
+        const d = b.data[0];
+        pm.test('ada identitas driver & kendaraan', () => {
+          pm.expect(d).to.have.property('tripId');
+          pm.expect(d).to.have.property('driverId');
+          pm.expect(d).to.have.property('vehicleId');
+        });
+        if (d.lastPoint !== null) {
+          pm.test('koordinat terakhir masuk akal', () => {
+            pm.expect(d.lastPoint.latitude).to.be.within(-90, 90);
+            pm.expect(d.lastPoint.longitude).to.be.within(-180, 180);
+          });
+        }
+      }
+    language: text/javascript
+order: 9500

@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/auth/logout-all
+description: ""
+url: "{{baseUrl}}/api/auth/logout-all"
+method: POST
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-auth-logout-all.resources/examples
+order: 1000

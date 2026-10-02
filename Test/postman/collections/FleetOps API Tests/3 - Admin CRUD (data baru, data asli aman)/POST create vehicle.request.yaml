@@ -1,0 +1,39 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/vehicles"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: VehicleName
+      value: ZZ Tes Otomatis
+    - type: text
+      key: PlatNomor
+      value: ZZ 9999 ZZ
+    - type: text
+      key: TahunPembuatan
+      value: "2023"
+    - type: text
+      key: Odometer
+      value: "100"
+    - type: text
+      key: Tipe
+      value: Pickup
+    - type: text
+      key: Status
+      value: Active
+    - type: text
+      key: MuatanMax
+      value: "800"
+    - type: text
+      key: TipeBensin
+      value: "0"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('dapat vehicleId', () => pm.expect(d.vehicleId).to.be.a('number'));
+      pm.environment.set('tmpVehicleId', d.vehicleId);
+    language: text/javascript
+order: 1000

@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "identity": "{{adminUser}}",
+      "password": "{{adminPass}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.environment.set('token', d.accessToken);
+      pm.environment.set('adminRefreshToken', d.refreshToken);
+    language: text/javascript
+order: 6000

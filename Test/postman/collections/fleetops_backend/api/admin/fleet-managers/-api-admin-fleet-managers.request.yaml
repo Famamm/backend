@@ -1,0 +1,25 @@
+$kind: http-request
+name: /api/admin/fleet-managers
+description: ""
+url: "{{baseUrl}}/api/admin/fleet-managers"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: string
+      description: ""
+    - type: text
+      key: Address
+      value: string
+      description: ""
+    - type: file
+      key: ProfilePhotoFile
+      src: ""
+      description: ""
+settings: {}
+examples: ./.resources/-api-admin-fleet-managers.resources/examples
+order: 1000

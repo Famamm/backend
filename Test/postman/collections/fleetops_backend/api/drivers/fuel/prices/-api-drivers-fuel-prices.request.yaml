@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/fuel/prices
+description: ""
+url: "{{baseUrl}}/api/drivers/fuel/prices"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-fuel-prices.resources/examples
+order: 1000

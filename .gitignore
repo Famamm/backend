@@ -1,0 +1,114 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options
+.vs/
+.vscode/
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.iml
+
+# Entity Framework Core migrations (optional - keep if you want to track)
+# Migrations/
+
+# Build folders
+*.dll
+*.exe
+*.pdb
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# ReSharper
+.idea/
+*.resharper
+*.resharper.user
+*.DotSettings.user
+
+# User-specific files
+appsettings.Local.json
+
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Postman
+# Environment files: berisi token/password saat runtime (jangan di-commit)
+*.environment.yaml
+Test/postman/environments/
+# Globals: bisa berisi token hasil run
+*.globals.yaml
+Test/postman/globals/
+# State sync local <-> cloud Postman (machine-specific)
+.postman/
+
+# Secret compose files
+docker-compose.secret.yml
+docker-compose.*.secret.yml
+docker-compose.local.yml
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# Node modules (if using npm)
+node_modules/
+
+# Dependencies
+packages/
+
+# Test Results
+TestResults/
+*.trx
+
+# Coverage
+coverage/
+*.coverage
+
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Miscellaneous
+dist/
+*.class
+*.jar
+
+
+# Claude Code (personal, jangan di-push)
+CLAUDE.md
+.claude/

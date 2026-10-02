@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/vehicles/{{tmpVehicleId}}"
+method: PUT
+body:
+  type: formdata
+  content:
+    - type: text
+      key: VehicleName
+      value: ZZ Tes Otomatis EDITED
+    - type: text
+      key: Odometer
+      value: "555"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('nama berubah', () => pm.expect(d.vehicleName).to.eql('ZZ Tes Otomatis EDITED'));
+      pm.test('odometer berubah', () => pm.expect(d.odometer).to.eql(555));
+      pm.test('plat nomor TIDAK berubah', () => pm.expect(d.platNomor).to.eql('ZZ 9999 ZZ'));
+    language: text/javascript
+order: 2000

@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/profile/me
+description: ""
+url: "{{baseUrl}}/api/drivers/profile/me"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-profile-me.resources/examples
+order: 1000

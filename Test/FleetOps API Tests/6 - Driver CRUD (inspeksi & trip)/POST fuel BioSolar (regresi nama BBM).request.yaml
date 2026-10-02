@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/fuel"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: VehicleId
+      value: "{{vehicleId}}"
+    - type: text
+      key: OrganizationId
+      value: "2"
+    - type: text
+      key: FuelType
+      value: "{{fuelType}}"
+    - type: text
+      key: JmlLiter
+      value: "10"
+    - type: text
+      key: HargaTotal
+      value: "68000"
+    - type: text
+      key: OdometerIsi
+      value: "15200"
+    - type: text
+      key: Catatan
+      value: ZZ tes otomatis
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200 - BioSolar diterima', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 14000

@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/vehicles/me/maintenance-status
+description: ""
+url: "{{baseUrl}}/api/drivers/vehicles/me/maintenance-status"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-vehicles-me-maintenance-status.resources/examples
+order: 1000

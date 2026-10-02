@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/admin/profile/me
+description: ""
+url: "{{baseUrl}}/api/admin/profile/me"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-profile-me.resources/examples
+order: 1000

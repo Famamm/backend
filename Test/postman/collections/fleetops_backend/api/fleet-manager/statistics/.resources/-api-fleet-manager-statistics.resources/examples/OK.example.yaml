@@ -1,0 +1,17 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/fleet-manager/statistics?bulan=183&tahun=183"
+  method: GET
+  queryParams:
+    bulan: "183"
+    tahun: "183"
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

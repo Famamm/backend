@@ -1,0 +1,58 @@
+$kind: http-request
+name: /api/drivers/trips
+description: ""
+url: "{{baseUrl}}/api/drivers/trips"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "driverId": 3648,
+      "vehicleId": 7038,
+      "lokasiAwal": "string",
+      "lokasiAkhir": "string",
+      "kordAwalLatitude": 1220.2622820204667,
+      "kordAwalLongitude": 4122.014946933764,
+      "odometerAwal": 8761
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "driverId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "vehicleId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "lokasiAwal": {
+          "type": "string"
+        },
+        "lokasiAkhir": {
+          "type": "string"
+        },
+        "kordAwalLatitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "kordAwalLongitude": {
+          "type": "number",
+          "format": "double"
+        },
+        "odometerAwal": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "driverId",
+        "vehicleId"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-drivers-trips.resources/examples
+order: 1000

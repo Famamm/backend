@@ -1,0 +1,31 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/drivers"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: ZZ Driver Tes Otomatis
+    - type: text
+      key: Address
+      value: Surabaya
+    - type: text
+      key: JenisLisensi
+      value: SIM B1
+    - type: text
+      key: TanggalBerlaku
+      value: 2027-12-31
+    - type: text
+      key: Status
+      value: Active
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('dapat driverId', () => pm.expect(d.driverId).to.be.a('number'));
+      pm.test('dapat generatedPassword', () => pm.expect(d.generatedPassword).to.be.a('string'));
+      pm.environment.set('tmpDriverId', d.driverId);
+    language: text/javascript
+order: 3000

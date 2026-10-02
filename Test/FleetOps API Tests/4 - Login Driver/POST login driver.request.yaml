@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "identity": "{{driverUser}}",
+      "password": "{{driverPass}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('role Driver', () => pm.expect(d.user.roleName).to.eql('Driver'));
+      pm.test('driverId tidak null', () => pm.expect(d.user.driverId).to.be.a('number'));
+      pm.environment.set('token', d.accessToken);
+      pm.environment.set('loggedDriverId', d.user.driverId);
+    language: text/javascript
+order: 1000

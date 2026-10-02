@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/statistics/me
+description: ""
+url: "{{baseUrl}}/api/drivers/statistics/me"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-statistics-me.resources/examples
+order: 1000

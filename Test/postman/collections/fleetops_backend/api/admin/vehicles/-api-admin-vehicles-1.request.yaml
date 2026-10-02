@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/admin/vehicles
+description: ""
+url: "{{baseUrl}}/api/admin/vehicles"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-vehicles-1.resources/examples
+order: 2000

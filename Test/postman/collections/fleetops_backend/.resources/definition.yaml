@@ -1,0 +1,37 @@
+$kind: collection
+description: |-
+  Koleksi hasil generate dari Swagger (fleetops_backend). Semua endpoint API.
+
+  SEBELUM RUN:
+  1. Backend harus nyala: docker compose -f docker-compose.local.yml up -d
+  2. Pilih environment "Fleetops Local" (baseUrl = http://localhost:5144)
+  3. Isi kredensial di tab Variables koleksi ini: adminUser, adminPass, driverUser, driverPass
+  4. Sesuaikan driverId, vehicleId, inspectionItemId dengan data di database-mu
+
+  CARA PAKAI:
+  - Jalankan request "POST /api/auth/login" lebih dulu. Script-nya otomatis menyimpan
+    accessToken ke variable {{token}} dan refreshToken ke {{adminRefreshToken}}.
+  - Semua request lain memakai bearer auth {{token}} dari level koleksi.
+variables:
+  baseUrl: http://localhost:5144
+  adminUser: ""
+  adminPass: ""
+  driverUser: ""
+  driverPass: ""
+  driverId: "1"
+  vehicleId: "1"
+  inspectionItemId: "5"
+  inspectionId: "1"
+  fuelId: "1"
+  tripId: "1"
+  maintenanceId: "1"
+  notificationId: "1"
+  fuelType: BioSolar
+  token: ""
+  adminRefreshToken: ""
+auth:
+  - id: 3f1c9a52-7d4b-4e18-9c6a-2b8f0d5e7a31
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{token}}"

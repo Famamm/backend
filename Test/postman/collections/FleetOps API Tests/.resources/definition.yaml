@@ -1,0 +1,41 @@
+$kind: collection
+description: |-
+  Quick testing semua endpoint FleetOps. Jalankan lewat Run Collection.
+
+  SEBELUM RUN:
+
+  1. Backend harus nyala: docker compose -f docker-compose.local.yml up -d
+      
+  2. Bikin environment baru, isi variable baseUrl = [http://localhost:5144](http://localhost:5144) dan token (kosongkan)
+      
+  3. WAJIB: isi dulu kredensialmu di tab Variables koleksi ini — adminUser, adminPass, driverUser, driverPass. Sengaja dikosongkan biar password tidak ikut ter-commit.
+      
+  4. Sesuaikan juga driverId, vehicleId, inspectionItemId dengan data di database-mu
+      
+
+  URUTAN PENTING: folder dijalankan berurutan dari atas ke bawah. Folder Cleanup menghapus kendaraan & driver yang dibuat saat tes, jadi data asli tidak tersentuh.
+
+  CATATAN: 1 baris pengisian BBM tersisa tiap kali run, karena backend belum punya endpoint DELETE fuel. Catatannya bertanda 'ZZ tes otomatis' — hapus manual lewat pgAdmin kalau menumpuk:  
+  DELETE FROM fuels WHERE catatan = 'ZZ tes otomatis';
+
+  Juga: driver yang dihapus hanya dinonaktifkan (baris user & driver tetap ada di database), itu memang perilaku backend-nya.
+
+  CATATAN FLEET MANAGER: folder '7 - Fleet Manager' membuat 1 akun FleetManager baru tiap run (username & password otomatis disimpan ke environment). Backend belum punya endpoint DELETE fleet manager, jadi akun ini menumpuk tiap run. Bersihkan manual lewat pgAdmin kalau perlu:  
+  DELETE FROM users WHERE full_name = 'ZZ Fleet Manager Tes';
+variables:
+  adminUser: ""
+  adminPass: ""
+  driverUser: ""
+  driverPass: ""
+  driverId: "2"
+  vehicleId: "2"
+  inspectionItemId: "5"
+  fuelType: BioSolar
+  fleetManagerUser: ""
+  fleetManagerPass: ""
+auth:
+  - id: be7f7740-a7f3-4356-ba33-cbf585231139
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: "{{token}}"

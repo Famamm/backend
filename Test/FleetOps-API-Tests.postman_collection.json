@@ -1,0 +1,1878 @@
+{
+  "info": {
+    "name": "FleetOps API Tests",
+    "description": "Quick testing semua endpoint FleetOps. Jalankan lewat Run Collection.\n\nSEBELUM RUN:\n1. Backend harus nyala: docker compose -f docker-compose.local.yml up -d\n2. Bikin environment baru, isi variable baseUrl = http://localhost:5144 dan token (kosongkan)\n3. WAJIB: isi dulu kredensialmu di tab Variables koleksi ini — adminUser, adminPass, driverUser, driverPass. Sengaja dikosongkan biar password tidak ikut ter-commit.\n4. Sesuaikan juga driverId, vehicleId, inspectionItemId dengan data di database-mu\n\nURUTAN PENTING: folder dijalankan berurutan dari atas ke bawah. Folder Cleanup menghapus kendaraan & driver yang dibuat saat tes, jadi data asli tidak tersentuh.\n\nCATATAN: 1 baris pengisian BBM tersisa tiap kali run, karena backend belum punya endpoint DELETE fuel. Catatannya bertanda 'ZZ tes otomatis' — hapus manual lewat pgAdmin kalau menumpuk:\nDELETE FROM fuels WHERE catatan = 'ZZ tes otomatis';\n\nJuga: driver yang dihapus hanya dinonaktifkan (baris user & driver tetap ada di database), itu memang perilaku backend-nya.\n\nCATATAN FLEET MANAGER: folder '7 - Fleet Manager' membuat 1 akun FleetManager baru tiap run (username & password otomatis disimpan ke environment). Backend belum punya endpoint DELETE fleet manager, jadi akun ini menumpuk tiap run. Bersihkan manual lewat pgAdmin kalau perlu:\nDELETE FROM users WHERE full_name = 'ZZ Fleet Manager Tes';",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "adminUser", "value": "" },
+    { "key": "adminPass", "value": "" },
+    { "key": "driverUser", "value": "" },
+    { "key": "driverPass", "value": "" },
+    { "key": "driverId", "value": "2" },
+    { "key": "vehicleId", "value": "2" },
+    { "key": "inspectionItemId", "value": "5" },
+    { "key": "fuelType", "value": "BioSolar" },
+    { "key": "fleetManagerUser", "value": "" },
+    { "key": "fleetManagerPass", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1 - Auth",
+      "item": [
+        {
+          "name": "POST login admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat accessToken', () => pm.expect(d.accessToken).to.be.a('string'));",
+                  "pm.test('dapat refreshToken', () => pm.expect(d.refreshToken).to.be.a('string'));",
+                  "pm.test('role Admin', () => pm.expect(d.user.roleName).to.eql('Admin'));",
+                  "pm.environment.set('token', d.accessToken);",
+                  "pm.environment.set('adminRefreshToken', d.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"{{adminPass}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "POST refresh (regresi IsRevoked)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 (bukan 500 - regresi IsRevoked)', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat accessToken baru', () => pm.expect(d.accessToken).to.be.a('string'));",
+                  "pm.test('dapat refreshToken baru', () => pm.expect(d.refreshToken).to.be.a('string'));",
+                  "pm.environment.set('token', d.accessToken);",
+                  "pm.environment.set('rotatedRefreshToken', d.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{adminRefreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "POST refresh pakai token LAMA (harus 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('token bekas ditolak 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{adminRefreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "POST logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 (bukan 500)', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{rotatedRefreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] }
+          }
+        },
+        {
+          "name": "POST refresh sesudah logout (harus 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('token sesudah logout ditolak 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{rotatedRefreshToken}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] }
+          }
+        },
+        {
+          "name": "POST login admin lagi (token sudah di-logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.environment.set('token', d.accessToken);",
+                  "pm.environment.set('adminRefreshToken', d.refreshToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"{{adminPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "POST login password salah (harus 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('password salah ditolak 401', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"pasti-salah-123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 - Admin (GET)",
+      "item": [
+        {
+          "name": "GET drivers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('response array', () => pm.expect(d).to.be.an('array'));",
+                  "pm.test('semua driver dari organisasi sendiri', () => {",
+                  "  pm.expect(d.length).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers"] }
+          }
+        },
+        {
+          "name": "GET driver by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('driverId cocok', () => pm.expect(pm.response.json().driverId).to.eql(Number(pm.collectionVariables.get('driverId'))));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers/{{driverId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers", "{{driverId}}"] }
+          }
+        },
+        {
+          "name": "GET vehicles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('response array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles"] }
+          }
+        },
+        {
+          "name": "GET vehicle by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('field lengkap (beda dgn list yg ringkas)', () => {",
+                  "  pm.expect(d.tipe).to.not.eql('');",
+                  "  pm.expect(d.status).to.not.eql('');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles/{{vehicleId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles", "{{vehicleId}}"] }
+          }
+        },
+        {
+          "name": "GET admin profile me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "admin", "profile", "me"] }
+          }
+        },
+        {
+          "name": "GET admin dashboard me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/dashboard/me", "host": ["{{baseUrl}}"], "path": ["api", "admin", "dashboard", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 - Admin CRUD (data baru, data asli aman)",
+      "item": [
+        {
+          "name": "POST create vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat vehicleId', () => pm.expect(d.vehicleId).to.be.a('number'));",
+                  "pm.environment.set('tmpVehicleId', d.vehicleId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "VehicleName", "value": "ZZ Tes Otomatis", "type": "text" },
+                { "key": "PlatNomor", "value": "ZZ 9999 ZZ", "type": "text" },
+                { "key": "TahunPembuatan", "value": "2023", "type": "text" },
+                { "key": "Odometer", "value": "100", "type": "text" },
+                { "key": "Tipe", "value": "Pickup", "type": "text" },
+                { "key": "Status", "value": "Active", "type": "text" },
+                { "key": "MuatanMax", "value": "800", "type": "text" },
+                { "key": "TipeBensin", "value": "0", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles"] }
+          }
+        },
+        {
+          "name": "PUT update vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('nama berubah', () => pm.expect(d.vehicleName).to.eql('ZZ Tes Otomatis EDITED'));",
+                  "pm.test('odometer berubah', () => pm.expect(d.odometer).to.eql(555));",
+                  "pm.test('plat nomor TIDAK berubah', () => pm.expect(d.platNomor).to.eql('ZZ 9999 ZZ'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "VehicleName", "value": "ZZ Tes Otomatis EDITED", "type": "text" },
+                { "key": "Odometer", "value": "555", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles/{{tmpVehicleId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles", "{{tmpVehicleId}}"] }
+          }
+        },
+        {
+          "name": "POST create driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat driverId', () => pm.expect(d.driverId).to.be.a('number'));",
+                  "pm.test('dapat generatedPassword', () => pm.expect(d.generatedPassword).to.be.a('string'));",
+                  "pm.environment.set('tmpDriverId', d.driverId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "FullName", "value": "ZZ Driver Tes Otomatis", "type": "text" },
+                { "key": "Address", "value": "Surabaya", "type": "text" },
+                { "key": "JenisLisensi", "value": "SIM B1", "type": "text" },
+                { "key": "TanggalBerlaku", "value": "2027-12-31", "type": "text" },
+                { "key": "Status", "value": "Active", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers"] }
+          }
+        },
+        {
+          "name": "PUT update driver tanpa TanggalBerlaku (harus 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('validasi jalan, ditolak 400', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan menyebut tanggal berlaku', () => pm.expect(pm.response.text()).to.include('Tanggal berlaku'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "FullName", "value": "ZZ Driver EDITED", "type": "text" }]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers/{{tmpDriverId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers", "{{tmpDriverId}}"] }
+          }
+        },
+        {
+          "name": "PUT update driver lengkap",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "FullName", "value": "ZZ Driver EDITED", "type": "text" },
+                { "key": "Address", "value": "Malang", "type": "text" },
+                { "key": "JenisLisensi", "value": "SIM B1", "type": "text" },
+                { "key": "TanggalBerlaku", "value": "2027-12-31", "type": "text" },
+                { "key": "Status", "value": "Active", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers/{{tmpDriverId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers", "{{tmpDriverId}}"] }
+          }
+        },
+        {
+          "name": "POST reset password driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('dapat password baru', () => pm.expect(pm.response.json().generatedPassword).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers/{{tmpDriverId}}/password/reset", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers", "{{tmpDriverId}}", "password", "reset"] }
+          }
+        },
+        {
+          "name": "PUT admin profile me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "FullName", "value": "hammam", "type": "text" },
+                { "key": "Address", "value": "Pasuruan", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "admin", "profile", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4 - Login Driver",
+      "item": [
+        {
+          "name": "POST login driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('role Driver', () => pm.expect(d.user.roleName).to.eql('Driver'));",
+                  "pm.test('driverId tidak null', () => pm.expect(d.user.driverId).to.be.a('number'));",
+                  "pm.environment.set('token', d.accessToken);",
+                  "pm.environment.set('loggedDriverId', d.user.driverId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{driverUser}}\",\n  \"password\": \"{{driverPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5 - Driver (GET)",
+      "item": [
+        {
+          "name": "GET driver profile me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('ada field kendaraan (dipakai mobile)', () => {",
+                  "  pm.expect(d).to.have.property('kendaraanAktif');",
+                  "  pm.expect(d).to.have.property('semuaKendaraan');",
+                  "  pm.expect(d).to.have.property('kendaraanTersedia');",
+                  "});",
+                  "pm.test('ada dokumen SIM', () => pm.expect(d.dokumen).to.have.property('jenisLisensi'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "profile", "me"] }
+          }
+        },
+        {
+          "name": "GET driver dashboard me",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/dashboard/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "dashboard", "me"] }
+          }
+        },
+        {
+          "name": "GET fuel prices",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('BioSolar ada (bukan BioSolar (Subsidi))', () => {",
+                  "  pm.expect(pm.response.text()).to.include('BioSolar');",
+                  "  pm.expect(pm.response.text()).to.not.include('BioSolar (Subsidi)');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel/prices", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel", "prices"] }
+          }
+        },
+        {
+          "name": "GET fuel efficiency",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel/efficiency", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel", "efficiency"] }
+          }
+        },
+        {
+          "name": "GET fuel history",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel/history", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel", "history"] }
+          }
+        },
+        {
+          "name": "GET inspection items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada item inspeksi', () => pm.expect(pm.response.json().count).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/inspection-items", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "inspection-items"] }
+          }
+        },
+        {
+          "name": "GET inspections by driver",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/driver/{{loggedDriverId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "driver", "{{loggedDriverId}}"] }
+          }
+        },
+        {
+          "name": "GET inspections by vehicle",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/vehicle/{{vehicleId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "vehicle", "{{vehicleId}}"] }
+          }
+        },
+        {
+          "name": "GET inspections me (endpoint baru)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field count', () => pm.expect(pm.response.json()).to.have.property('count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "me"] }
+          }
+        },
+        {
+          "name": "GET inspections me today (endpoint baru)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field count', () => pm.expect(pm.response.json()).to.have.property('count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/me/today", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "me", "today"] }
+          }
+        },
+        {
+          "name": "GET trips by driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 atau 404 (404 = belum ada trip)', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/driver/{{loggedDriverId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "driver", "{{loggedDriverId}}"] }
+          }
+        },
+        {
+          "name": "GET trip aktif",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 atau 204 (204 = tidak ada trip aktif)', () => pm.expect([200, 204]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/driver/{{loggedDriverId}}/active", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "driver", "{{loggedDriverId}}", "active"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6 - Driver CRUD (inspeksi & trip)",
+      "item": [
+        {
+          "name": "PUT pilih kendaraan",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"vehicleId\": {{vehicleId}}\n}" },
+            "url": { "raw": "{{baseUrl}}/api/drivers/profile/me/vehicle", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "profile", "me", "vehicle"] }
+          }
+        },
+        {
+          "name": "POST start trip tanpa inspeksi (harus 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ditolak 400 - wajib inspeksi dulu', () => pm.response.to.have.status(400));",
+                  "pm.test('pesan menyebut inspection', () => pm.expect(pm.response.text().toLowerCase()).to.include('inspection'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"driverId\": {{loggedDriverId}},\n  \"vehicleId\": {{vehicleId}},\n  \"lokasiAwal\": \"Pasuruan\",\n  \"odometerAwal\": 15000\n}" },
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips"] }
+          }
+        },
+        {
+          "name": "POST create inspeksi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat inspection id', () => pm.expect(d.inspection.id).to.be.a('number'));",
+                  "pm.environment.set('tmpInspectionId', d.inspection.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "DriverId", "value": "{{loggedDriverId}}", "type": "text" },
+                { "key": "VehicleId", "value": "{{vehicleId}}", "type": "text" },
+                { "key": "Results[0].ItemId", "value": "{{inspectionItemId}}", "type": "text" },
+                { "key": "Results[0].Condition", "value": "1", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections"] }
+          }
+        },
+        {
+          "name": "GET inspections me today (harus ada isinya)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('inspeksi hari ini terbaca', () => pm.expect(pm.response.json().count).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/me/today", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "me", "today"] }
+          }
+        },
+        {
+          "name": "GET detail inspeksi",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/{{tmpInspectionId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "{{tmpInspectionId}}"] }
+          }
+        },
+        {
+          "name": "POST create inspeksi kedua hari ini (harus 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ditolak 400 - sudah inspeksi hari ini', () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "DriverId", "value": "{{loggedDriverId}}", "type": "text" },
+                { "key": "VehicleId", "value": "{{vehicleId}}", "type": "text" },
+                { "key": "Results[0].ItemId", "value": "{{inspectionItemId}}", "type": "text" },
+                { "key": "Results[0].Condition", "value": "1", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections"] }
+          }
+        },
+        {
+          "name": "POST start trip (sesudah inspeksi)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('status Ongoing', () => pm.expect(d.status).to.eql('Ongoing'));",
+                  "pm.environment.set('tmpTripId', d.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"driverId\": {{loggedDriverId}},\n  \"vehicleId\": {{vehicleId}},\n  \"lokasiAwal\": \"Pasuruan\",\n  \"kordAwalLatitude\": -7.6,\n  \"kordAwalLongitude\": 112.9,\n  \"odometerAwal\": 15000\n}" },
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips"] }
+          }
+        },
+        {
+          "name": "POST simpan batch GPS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('menerima batch GPS', () => pm.expect(d.receivedCount).to.eql(2));",
+                  "pm.test('menyimpan titik GPS', () => pm.expect(d.savedCount).to.be.at.least(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"points\": [\n    {\n      \"clientId\": \"{{$guid}}\",\n      \"latitude\": -7.2451,\n      \"longitude\": 112.7321,\n      \"capturedAt\": \"{{$isoTimestamp}}\",\n      \"accuracyMeters\": 8.5\n    },\n    {\n      \"clientId\": \"{{$guid}}\",\n      \"latitude\": -7.2455,\n      \"longitude\": 112.7328,\n      \"capturedAt\": \"{{$isoTimestamp}}\",\n      \"accuracyMeters\": 7.2\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/{{tmpTripId}}/gps", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "{{tmpTripId}}", "gps"] }
+          }
+        },
+        {
+          "name": "POST GPS terlalu cepat (harus 429)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ditolak rate limit 429', () => pm.response.to.have.status(429));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"points\": [\n    {\n      \"clientId\": \"{{$guid}}\",\n      \"latitude\": -7.2460,\n      \"longitude\": 112.7330,\n      \"capturedAt\": \"{{$isoTimestamp}}\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/{{tmpTripId}}/gps", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "{{tmpTripId}}", "gps"] }
+          }
+        },
+        {
+          "name": "GET trip aktif (harus ada)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('trip aktif ditemukan', () => pm.expect(pm.response.json().data.status).to.eql('Ongoing'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/driver/{{loggedDriverId}}/active", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "driver", "{{loggedDriverId}}", "active"] }
+          }
+        },
+        {
+          "name": "GET detail trip",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/{{tmpTripId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "{{tmpTripId}}"] }
+          }
+        },
+        {
+          "name": "PATCH cancel trip",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"driverId\": {{loggedDriverId}}\n}" },
+            "url": { "raw": "{{baseUrl}}/api/drivers/trips/{{tmpTripId}}/cancel", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "trips", "{{tmpTripId}}", "cancel"] }
+          }
+        },
+        {
+          "name": "POST fuel jenis BBM salah (harus 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('jenis BBM ngawur ditolak 404', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "VehicleId", "value": "{{vehicleId}}", "type": "text" },
+                { "key": "OrganizationId", "value": "2", "type": "text" },
+                { "key": "FuelType", "value": "BensinNgawur999", "type": "text" },
+                { "key": "JmlLiter", "value": "10", "type": "text" },
+                { "key": "HargaTotal", "value": "68000", "type": "text" },
+                { "key": "OdometerIsi", "value": "15200", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel"] }
+          }
+        },
+        {
+          "name": "POST fuel BioSolar (regresi nama BBM)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 - BioSolar diterima', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "VehicleId", "value": "{{vehicleId}}", "type": "text" },
+                { "key": "OrganizationId", "value": "2", "type": "text" },
+                { "key": "FuelType", "value": "{{fuelType}}", "type": "text" },
+                { "key": "JmlLiter", "value": "10", "type": "text" },
+                { "key": "HargaTotal", "value": "68000", "type": "text" },
+                { "key": "OdometerIsi", "value": "15200", "type": "text" },
+                { "key": "Catatan", "value": "ZZ tes otomatis", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel"] }
+          }
+        },
+        {
+          "name": "DELETE inspeksi tes",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/{{tmpInspectionId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "{{tmpInspectionId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7 - Fleet Manager (setup & CRUD)",
+      "item": [
+        {
+          "name": "POST login admin (untuk setup)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('token', pm.response.json().accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"{{adminPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "POST create fleet manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat username', () => pm.expect(d.username).to.be.a('string'));",
+                  "pm.test('dapat generatedPassword', () => pm.expect(d.generatedPassword).to.be.a('string'));",
+                  "pm.environment.set('fleetManagerUser', d.username);",
+                  "pm.environment.set('fleetManagerPass', d.generatedPassword);",
+                  "pm.environment.set('tmpFleetManagerUserId', d.userId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "FullName", "value": "ZZ Fleet Manager Tes", "type": "text" },
+                { "key": "Address", "value": "Surabaya", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/admin/fleet-managers", "host": ["{{baseUrl}}"], "path": ["api", "admin", "fleet-managers"] }
+          }
+        },
+        {
+          "name": "GET fleet managers (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field count', () => pm.expect(pm.response.json()).to.have.property('count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/fleet-managers", "host": ["{{baseUrl}}"], "path": ["api", "admin", "fleet-managers"] }
+          }
+        },
+        {
+          "name": "POST login fleet manager",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('role FleetManager', () => pm.expect(d.user.roleName).to.eql('FleetManager'));",
+                  "pm.environment.set('token', d.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{fleetManagerUser}}\",\n  \"password\": \"{{fleetManagerPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "GET fleet summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada data ringkasan', () => pm.expect(pm.response.json()).to.have.property('data'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/summary", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "summary"] }
+          }
+        },
+        {
+          "name": "GET fleet vehicles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field count', () => pm.expect(pm.response.json()).to.have.property('count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles"] }
+          }
+        },
+        {
+          "name": "GET available drivers",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field drivers', () => pm.expect(pm.response.json()).to.have.property('drivers'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/drivers/available", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "drivers", "available"] }
+          }
+        },
+        {
+          "name": "GET current driver kendaraan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/current-driver", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "current-driver"] }
+          }
+        },
+        {
+          "name": "POST assign driver ke kendaraan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"vehicleId\": {{vehicleId}},\n  \"driverId\": {{driverId}}\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/assignments", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "assignments"] }
+          }
+        },
+        {
+          "name": "GET current driver (harus terisi)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('driver ter-assign', () => pm.expect(pm.response.json().data).to.not.eql(null));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/current-driver", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "current-driver"] }
+          }
+        },
+        {
+          "name": "DELETE lepas driver dari kendaraan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/driver", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "driver"] }
+          }
+        },
+        {
+          "name": "POST create jadwal pemeliharaan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json();",
+                  "pm.test('dapat maintenance id', () => pm.expect(d.data.id).to.be.a('number'));",
+                  "pm.test('status Scheduled', () => pm.expect(d.data.status).to.eql('Scheduled'));",
+                  "pm.environment.set('tmpMaintenanceId', d.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"jenis\": \"Servis rutin ZZ\",\n  \"targetOdometer\": 999999,\n  \"catatan\": \"ZZ tes otomatis\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/maintenances", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "maintenances"] }
+          }
+        },
+        {
+          "name": "GET maintenances by vehicle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada jadwal', () => pm.expect(pm.response.json().count).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/maintenances", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "maintenances"] }
+          }
+        },
+        {
+          "name": "GET detail maintenance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/maintenances/{{tmpMaintenanceId}}", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "maintenances", "{{tmpMaintenanceId}}"] }
+          }
+        },
+        {
+          "name": "PUT update jadwal pemeliharaan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('jenis berubah', () => pm.expect(pm.response.json().data.jenis).to.eql('Servis rutin ZZ EDITED'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"jenis\": \"Servis rutin ZZ EDITED\",\n  \"targetOdometer\": 999999\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/maintenances/{{tmpMaintenanceId}}", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "maintenances", "{{tmpMaintenanceId}}"] }
+          }
+        },
+        {
+          "name": "PUT status maintenance -> InProgress",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status InProgress', () => pm.expect(pm.response.json().data.status).to.eql('InProgress'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"InProgress\",\n  \"odometer\": 999999,\n  \"biaya\": 250000,\n  \"catatan\": \"ZZ tes otomatis\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/maintenances/{{tmpMaintenanceId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "maintenances", "{{tmpMaintenanceId}}", "status"] }
+          }
+        },
+        {
+          "name": "GET fleet maintenance status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field count', () => pm.expect(pm.response.json()).to.have.property('count'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/maintenance-status", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "maintenance-status"] }
+          }
+        },
+        {
+          "name": "PUT status maintenance -> Completed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status Completed', () => pm.expect(pm.response.json().data.status).to.eql('Completed'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"Completed\",\n  \"odometer\": 999999,\n  \"biaya\": 250000\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/maintenances/{{tmpMaintenanceId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "maintenances", "{{tmpMaintenanceId}}", "status"] }
+          }
+        },
+        {
+          "name": "POST create jadwal kedua (untuk tes delete)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.environment.set('tmpMaintenanceId2', pm.response.json().data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"jenis\": \"Servis rutin ZZ hapus\",\n  \"targetOdometer\": 999999\n}" },
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/maintenances", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "maintenances"] }
+          }
+        },
+        {
+          "name": "DELETE jadwal pemeliharaan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('tmpMaintenanceId2');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/maintenances/{{tmpMaintenanceId2}}", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "maintenances", "{{tmpMaintenanceId2}}"] }
+          }
+        },
+        {
+          "name": "GET notifications (fleet manager)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field notifications', () => pm.expect(pm.response.json()).to.have.property('notifications'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/notifications", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "notifications"] }
+          }
+        },
+        {
+          "name": "GET notifications unreadOnly",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/notifications?unreadOnly=true", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "notifications"], "query": [{ "key": "unreadOnly", "value": "true" }] }
+          }
+        },
+        {
+          "name": "PATCH notifications read-all",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "notifications", "read-all"] }
+          }
+        },
+        {
+          "name": "GET fuel baseline kendaraan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field IsReliable', () => pm.expect(pm.response.json().data).to.have.property('isReliable'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/fuel-baseline", "host": ["{{baseUrl}}"], "path": ["api", "fleet-manager", "vehicles", "{{vehicleId}}", "fuel-baseline"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8 - Driver (endpoint baru)",
+      "item": [
+        {
+          "name": "POST login driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test('role Driver', () => pm.expect(d.user.roleName).to.eql('Driver'));",
+                  "pm.environment.set('token', d.accessToken);",
+                  "pm.environment.set('loggedDriverId', d.user.driverId);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{driverUser}}\",\n  \"password\": \"{{driverPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "GET driver statistics me",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('ada field statistik', () => {",
+                  "  pm.expect(d).to.have.property('totalJarak');",
+                  "  pm.expect(d).to.have.property('totalTrip');",
+                  "  pm.expect(d).to.have.property('totalJamMengemudi');",
+                  "  pm.expect(d).to.have.property('rataRataKecepatan');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/statistics/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "statistics", "me"] }
+          }
+        },
+        {
+          "name": "GET driver notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ada field notifications', () => pm.expect(pm.response.json()).to.have.property('notifications'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/notifications", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "notifications"] }
+          }
+        },
+        {
+          "name": "GET driver notifications unreadOnly",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/notifications?unreadOnly=true", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "notifications"], "query": [{ "key": "unreadOnly", "value": "true" }] }
+          }
+        },
+        {
+          "name": "PATCH driver notifications read-all",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}/api/drivers/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "notifications", "read-all"] }
+          }
+        },
+        {
+          "name": "GET driver maintenance status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 atau 404 (404 = belum ada kendaraan)', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/vehicles/me/maintenance-status", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "vehicles", "me", "maintenance-status"] }
+          }
+        },
+        {
+          "name": "GET fuel history (ambil fuelId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json().data;",
+                  "pm.test('data array', () => pm.expect(d).to.be.an('array'));",
+                  "if (d.length > 0) { pm.environment.set('tmpFuelId', d[0].fuelId); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel/history", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel", "history"] }
+          }
+        },
+        {
+          "name": "GET fuel detail by id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200 atau 404 (404 = belum ada riwayat)', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/fuel/{{tmpFuelId}}", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "fuel", "{{tmpFuelId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9 - Keamanan",
+      "item": [
+        {
+          "name": "Driver akses endpoint admin (harus 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('driver ditolak dari admin 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles"] }
+          }
+        },
+        {
+          "name": "Driver intip inspeksi org lain (harus kosong)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('data organisasi lain TIDAK bocor', () => pm.expect(pm.response.json().count).to.eql(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/inspections/driver/1", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "inspections", "driver", "1"] }
+          }
+        },
+        {
+          "name": "Tanpa token (harus 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('tanpa token ditolak 401', () => pm.response.to.have.status(401));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "profile", "me"] }
+          }
+        },
+        {
+          "name": "Login admin lagi untuk cleanup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('token', pm.response.json().accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"{{adminPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Admin akses endpoint driver (harus 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('admin ditolak dari driver 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "profile", "me"] }
+          }
+        },
+        {
+          "name": "Login fleet manager untuk tes keamanan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('token', pm.response.json().accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{fleetManagerUser}}\",\n  \"password\": \"{{fleetManagerPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Fleet manager akses endpoint admin (harus 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('fleet manager ditolak dari admin 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles"] }
+          }
+        },
+        {
+          "name": "Fleet manager akses endpoint driver (harus 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": ["pm.test('fleet manager ditolak dari driver 403', () => pm.response.to.have.status(403));"],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/drivers/profile/me", "host": ["{{baseUrl}}"], "path": ["api", "drivers", "profile", "me"] }
+          }
+        },
+        {
+          "name": "Login admin lagi untuk cleanup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.set('token', pm.response.json().accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"{{adminUser}}\",\n  \"password\": \"{{adminPass}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Cleanup",
+      "item": [
+        {
+          "name": "DELETE driver tes",
+          "event": [
+            { "listen": "test", "script": { "exec": ["pm.test('status 200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/admin/drivers/{{tmpDriverId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "drivers", "{{tmpDriverId}}"] }
+          }
+        },
+        {
+          "name": "DELETE vehicle tes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.environment.unset('tmpVehicleId');",
+                  "pm.environment.unset('tmpDriverId');",
+                  "pm.environment.unset('tmpInspectionId');",
+                  "pm.environment.unset('tmpTripId');",
+                  "pm.environment.unset('tmpMaintenanceId');",
+                  "pm.environment.unset('tmpMaintenanceId2');",
+                  "pm.environment.unset('tmpFuelId');",
+                  "pm.environment.unset('tmpFleetManagerUserId');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/api/admin/vehicles/{{tmpVehicleId}}", "host": ["{{baseUrl}}"], "path": ["api", "admin", "vehicles", "{{tmpVehicleId}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+@fleetops_backend_HostAddress = http://localhost:5107
+@existingDriverId = 1
+@existingVehicleId = 1
+@nonExistingVehicleId = 999999
+@existingTripId = 10
+@nonExistingTripId = 999999
+
+### Login
+POST {{fleetops_backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "wkwk@gmail.com",
+  "password": "wkwkwkwk"
+}
+
+### Register
+POST {{fleetops_backend_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "fullName": "Fit",
+  "email": "wkwk@gmail.com",
+  "password": "wkwkwkwk"
+}
+
+### Get Users
+GET {{fleetops_backend_HostAddress}}/api/auth/users
+Content-Type: application/json
+
+### Start Trip - Successful
+POST {{fleetops_backend_HostAddress}}/api/trips/start
+Content-Type: application/json
+
+{
+  "driverId": {{existingDriverId}},
+  "vehicleId": {{existingVehicleId}},
+  "lokasiAwal": "Jakarta",
+  "lokasiAkhir": "Bandung",
+  "kordAwalLatitude": -6.2088,
+  "kordAwalLongitude": 106.8456,
+  "odometerAwal": 1000.5
+}
+
+### Stop Trip - With Image Upload
+PATCH {{fleetops_backend_HostAddress}}/api/trips/{{existingTripId}}/stop
+Content-Type: multipart/form-data; boundary=----FormBoundary
+
+------FormBoundary
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary
+Content-Disposition: form-data; name="VehicleId"
+
+{{existingVehicleId}}
+------FormBoundary
+Content-Disposition: form-data; name="LokasiAkhir"
+
+Bandung
+------FormBoundary
+Content-Disposition: form-data; name="KordAkhirLatitude"
+
+-6.9147
+------FormBoundary
+Content-Disposition: form-data; name="KordAkhirLongitude"
+
+107.6098
+------FormBoundary
+Content-Disposition: form-data; name="OdometerAkhir"
+
+1050.8
+------FormBoundary
+Content-Disposition: form-data; name="Catatan"
+
+Saya ini sebenarnya sudah diam 4,5 tahun. Difitnah-fitnah saya diam, dijelek-jelekkan saya diam, dicela dan direndah-rendahkan saya juga diam, dihujat, dihina saya juga diam.Tapi hari ini di Jogja saya sampaikan: Saya akan lawan! Ingat, ingat, ingat sekali lagi, akan saya lawan!
+------FormBoundary
+Content-Disposition: form-data; name="Image"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< ./testingimage/test.jpg
+------FormBoundary--
+
+### Create Vehicle - With Image
+POST {{fleetops_backend_HostAddress}}/api/vehicles/create
+Content-Type: multipart/form-data; boundary=----FormBoundary
+
+------FormBoundary
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary
+Content-Disposition: form-data; name="VehicleName"
+
+My Test Truck
+------FormBoundary
+Content-Disposition: form-data; name="PlatNomor"
+
+B1234XYZ
+------FormBoundary
+Content-Disposition: form-data; name="TahunPembuatan"
+
+2024
+------FormBoundary
+Content-Disposition: form-data; name="Odometer"
+
+12345
+------FormBoundary
+Content-Disposition: form-data; name="Tipe"
+
+Tronton
+------FormBoundary
+Content-Disposition: form-data; name="Status"
+
+Active
+------FormBoundary
+Content-Disposition: form-data; name="MuatanMax"
+
+10000
+------FormBoundary
+Content-Disposition: form-data; name="TipeBensin"
+
+Solar
+------FormBoundary
+Content-Disposition: form-data; name="Image"; filename="test-image.jpg"
+Content-Type: image/jpeg
+
+< ./testingimage/test.jpg
+------FormBoundary--
+
+### Create Vehicle - Without Image
+POST {{fleetops_backend_HostAddress}}/api/vehicles/create
+Content-Type: multipart/form-data; boundary=----FormBoundary
+
+------FormBoundary
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary
+Content-Disposition: form-data; name="VehicleName"
+
+My Test Truck 2
+------FormBoundary
+Content-Disposition: form-data; name="PlatNomor"
+
+B5678ABC
+------FormBoundary
+Content-Disposition: form-data; name="TahunPembuatan"
+
+2023
+------FormBoundary
+Content-Disposition: form-data; name="Odometer"
+
+54321
+------FormBoundary
+Content-Disposition: form-data; name="Tipe"
+
+Box
+------FormBoundary
+Content-Disposition: form-data; name="Status"
+
+Active
+------FormBoundary
+Content-Disposition: form-data; name="MuatanMax"
+
+5000
+------FormBoundary
+Content-Disposition: form-data; name="TipeBensin"
+
+Pertamax
+------FormBoundary--
+
+### Cancel Trip
+PATCH {{fleetops_backend_HostAddress}}/api/trips/{{existingTripId}}/cancel
+Content-Type: application/json
+
+{
+  "driverId": {{existingDriverId}}
+}

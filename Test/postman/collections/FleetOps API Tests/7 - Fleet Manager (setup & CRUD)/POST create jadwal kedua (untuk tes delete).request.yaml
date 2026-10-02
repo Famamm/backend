@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/maintenances"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "jenis": "Servis rutin ZZ hapus",
+      "targetOdometer": 999999
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 201', () => pm.response.to.have.status(201));
+      pm.environment.set('tmpMaintenanceId2', pm.response.json().data.id);
+    language: text/javascript
+order: 19000

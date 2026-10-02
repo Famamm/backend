@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/trips/driver/{{loggedDriverId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200 atau 404 (404 = belum ada trip)', () => pm.expect([200, 404]).to.include(pm.response.code));
+    language: text/javascript
+order: 11000

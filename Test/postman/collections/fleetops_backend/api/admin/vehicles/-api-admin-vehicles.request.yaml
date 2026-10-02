@@ -1,0 +1,49 @@
+$kind: http-request
+name: /api/admin/vehicles
+description: ""
+url: "{{baseUrl}}/api/admin/vehicles"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+body:
+  type: formdata
+  content:
+    - type: text
+      key: MuatanMax
+      value: "2195"
+      description: ""
+    - type: text
+      key: Odometer
+      value: "5756"
+      description: ""
+    - type: text
+      key: PlatNomor
+      value: string
+      description: ""
+    - type: text
+      key: Status
+      value: string
+      description: ""
+    - type: text
+      key: TahunPembuatan
+      value: "5164"
+      description: ""
+    - type: text
+      key: Tipe
+      value: string
+      description: ""
+    - type: text
+      key: TipeBensin
+      value: "1"
+      description: ""
+    - type: text
+      key: VehicleName
+      value: string
+      description: ""
+    - type: file
+      key: Image
+      src: ""
+      description: ""
+settings: {}
+examples: ./.resources/-api-admin-vehicles.resources/examples
+order: 1000

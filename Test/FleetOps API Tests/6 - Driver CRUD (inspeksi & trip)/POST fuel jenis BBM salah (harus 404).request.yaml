@@ -1,0 +1,29 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/fuel"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: VehicleId
+      value: "{{vehicleId}}"
+    - type: text
+      key: OrganizationId
+      value: "2"
+    - type: text
+      key: FuelType
+      value: BensinNgawur999
+    - type: text
+      key: JmlLiter
+      value: "10"
+    - type: text
+      key: HargaTotal
+      value: "68000"
+    - type: text
+      key: OdometerIsi
+      value: "15200"
+scripts:
+  - type: afterResponse
+    code: pm.test('jenis BBM ngawur ditolak 404', () => pm.response.to.have.status(404));
+    language: text/javascript
+order: 13000

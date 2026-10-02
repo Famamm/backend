@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/fleet-manager/drivers/available
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/drivers/available"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-drivers-available.resources/examples
+order: 1000

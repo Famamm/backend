@@ -1,0 +1,31 @@
+$kind: http-request
+name: /api/fleet-manager/assignments
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/assignments"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "vehicleId": 1548,
+      "driverId": 3600
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "vehicleId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "driverId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    }
+settings: {}
+examples: ./.resources/-api-fleet-manager-assignments.resources/examples
+order: 1000

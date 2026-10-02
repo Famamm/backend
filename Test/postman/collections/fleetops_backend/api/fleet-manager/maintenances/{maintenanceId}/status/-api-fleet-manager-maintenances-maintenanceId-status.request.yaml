@@ -1,0 +1,60 @@
+$kind: http-request
+name: /api/fleet-manager/maintenances/:maintenanceId/status
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/maintenances/:maintenanceId/status"
+method: PUT
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: maintenanceId
+    value: "{{maintenanceId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "status": "string",
+      "odometer": 9321,
+      "biaya": 4498.885757767235,
+      "catatan": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string"
+        },
+        "odometer": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "biaya": {
+          "type": "number",
+          "format": "double"
+        },
+        "catatan": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-fleet-manager-maintenances-maintenanceId-status.resources/examples
+order: 1000

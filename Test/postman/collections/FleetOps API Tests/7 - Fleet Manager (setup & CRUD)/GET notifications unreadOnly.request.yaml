@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fleet-manager/notifications?unreadOnly=true"
+method: GET
+queryParams:
+  unreadOnly: "true"
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 22000

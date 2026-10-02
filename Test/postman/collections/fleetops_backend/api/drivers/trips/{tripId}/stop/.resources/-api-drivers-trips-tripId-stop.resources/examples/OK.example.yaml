@@ -1,0 +1,50 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/drivers/trips/:tripId/stop"
+  method: PATCH
+  headers:
+    Content-Type: multipart/form-data
+  pathVariables:
+    tripId: "183"
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: DriverId
+        value: "1151"
+        description: ""
+      - type: file
+        key: Image
+        src: ""
+        description: ""
+      - type: text
+        key: VehicleId
+        value: "9726"
+        description: ""
+      - type: text
+        key: LokasiAkhir
+        value: string
+        description: ""
+      - type: text
+        key: KordAkhirLatitude
+        value: "7217.559553085631"
+        description: ""
+      - type: text
+        key: KordAkhirLongitude
+        value: "9122.002616574564"
+        description: ""
+      - type: text
+        key: OdometerAkhir
+        value: "8622"
+        description: ""
+      - type: text
+        key: Catatan
+        value: string
+        description: ""
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

@@ -1,0 +1,67 @@
+$kind: http-request
+name: /api/admin/vehicles/:vehicleId
+description: ""
+url: "{{baseUrl}}/api/admin/vehicles/:vehicleId"
+method: PUT
+headers:
+  Content-Type: multipart/form-data
+pathVariables:
+  - key: vehicleId
+    value: "{{vehicleId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: formdata
+  content:
+    - type: text
+      key: VehicleName
+      value: string
+      description: ""
+    - type: text
+      key: PlatNomor
+      value: string
+      description: ""
+    - type: text
+      key: TahunPembuatan
+      value: "1566"
+      description: ""
+    - type: text
+      key: Odometer
+      value: "5548"
+      description: ""
+    - type: text
+      key: Tipe
+      value: string
+      description: ""
+    - type: text
+      key: Status
+      value: string
+      description: ""
+    - type: text
+      key: MuatanMax
+      value: "9738"
+      description: ""
+    - type: text
+      key: TipeBensin
+      value: "1"
+      description: ""
+    - type: file
+      key: Image
+      src: ""
+      description: ""
+settings: {}
+examples: ./.resources/-api-admin-vehicles-vehicleId-1.resources/examples
+order: 2000

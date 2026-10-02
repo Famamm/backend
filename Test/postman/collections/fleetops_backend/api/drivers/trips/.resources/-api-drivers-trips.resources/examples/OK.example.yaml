@@ -1,0 +1,25 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/drivers/trips"
+  method: POST
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "driverId": 3648,
+        "vehicleId": 7038,
+        "lokasiAwal": "string",
+        "lokasiAkhir": "string",
+        "kordAwalLatitude": 1220.2622820204667,
+        "kordAwalLongitude": 4122.014946933764,
+        "odometerAwal": 8761
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

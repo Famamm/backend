@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/vehicles/{{tmpVehicleId}}"
+method: DELETE
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      pm.environment.unset('tmpVehicleId');
+      pm.environment.unset('tmpDriverId');
+      pm.environment.unset('tmpInspectionId');
+      pm.environment.unset('tmpTripId');
+      pm.environment.unset('tmpMaintenanceId');
+      pm.environment.unset('tmpMaintenanceId2');
+      pm.environment.unset('tmpFuelId');
+      pm.environment.unset('tmpFleetManagerUserId');
+    language: text/javascript
+order: 2000

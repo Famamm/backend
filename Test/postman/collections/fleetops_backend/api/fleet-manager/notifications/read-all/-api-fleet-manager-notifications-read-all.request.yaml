@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/fleet-manager/notifications/read-all
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/notifications/read-all"
+method: PATCH
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-notifications-read-all.resources/examples
+order: 1000

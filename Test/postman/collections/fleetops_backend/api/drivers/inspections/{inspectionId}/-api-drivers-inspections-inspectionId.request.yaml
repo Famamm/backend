@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/drivers/inspections/:inspectionId
+description: ""
+url: "{{baseUrl}}/api/drivers/inspections/:inspectionId"
+method: GET
+pathVariables:
+  - key: inspectionId
+    value: "{{inspectionId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-inspections-inspectionId.resources/examples
+order: 1000

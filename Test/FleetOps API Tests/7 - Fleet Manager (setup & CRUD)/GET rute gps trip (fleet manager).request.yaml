@@ -1,0 +1,27 @@
+$kind: http-request
+url: "{{baseUrl}}/api/trips/{{tmpTripId}}/gps"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json().data;
+      pm.test('trip id sesuai', () => pm.expect(String(d.tripId)).to.eql(String(pm.environment.get('tmpTripId'))));
+      pm.test('pointCount cocok dengan jumlah points', () => pm.expect(d.points.length).to.eql(d.pointCount));
+      if (d.points.length > 0) {
+        const p = d.points[0];
+        pm.test('field titik sesuai kontrak mobile', () => {
+          pm.expect(p).to.have.property('clientId');
+          pm.expect(p).to.have.property('latitude');
+          pm.expect(p).to.have.property('longitude');
+          pm.expect(p).to.have.property('capturedAt');
+        });
+        // Latitude dan longitude mudah tertukar karena di database disimpan
+        // sebagai Point(longitude, latitude) — dicek supaya regresi ketahuan.
+        pm.test('latitude & longitude tidak tertukar', () => {
+          pm.expect(p.latitude).to.be.within(-90, 90);
+          pm.expect(p.longitude).to.be.within(-180, 180);
+        });
+      }
+    language: text/javascript
+order: 9000

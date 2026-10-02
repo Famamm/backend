@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/drivers/inspections
+description: ""
+url: "{{baseUrl}}/api/drivers/inspections"
+method: POST
+headers:
+  Content-Type: multipart/form-data
+body:
+  type: formdata
+  content:
+    - type: text
+      key: DriverId
+      value: "4205"
+      description: ""
+    - type: text
+      key: VehicleId
+      value: "2054"
+      description: ""
+    - type: text
+      key: Results
+      value: "[object Object],[object Object]"
+      description: ""
+    - type: text
+      key: Photos
+      value: string,string
+      description: ""
+settings: {}
+examples: ./.resources/-api-drivers-inspections.resources/examples
+order: 1000

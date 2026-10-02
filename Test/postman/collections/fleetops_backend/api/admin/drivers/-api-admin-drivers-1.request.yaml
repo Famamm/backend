@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/admin/drivers
+description: ""
+url: "{{baseUrl}}/api/admin/drivers"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-drivers-1.resources/examples
+order: 2000

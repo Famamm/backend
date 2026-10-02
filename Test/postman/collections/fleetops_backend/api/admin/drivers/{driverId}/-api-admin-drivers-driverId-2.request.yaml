@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/admin/drivers/:driverId
+description: ""
+url: "{{baseUrl}}/api/admin/drivers/:driverId"
+method: DELETE
+pathVariables:
+  - key: driverId
+    value: "{{driverId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-drivers-driverId-2.resources/examples
+order: 3000

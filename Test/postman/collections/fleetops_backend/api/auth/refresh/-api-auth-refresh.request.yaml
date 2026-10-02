@@ -1,0 +1,28 @@
+$kind: http-request
+name: /api/auth/refresh
+description: Tukar refreshToken jadi accessToken baru. Pakai {{adminRefreshToken}} hasil login.
+url: "{{baseUrl}}/api/auth/refresh"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "refreshToken": "{{adminRefreshToken}}"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "refreshToken": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "refreshToken"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-auth-refresh.resources/examples
+order: 1000

@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/admin/vehicles/:vehicleId
+description: ""
+url: "{{baseUrl}}/api/admin/vehicles/:vehicleId"
+method: GET
+pathVariables:
+  - key: vehicleId
+    value: "{{vehicleId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-admin-vehicles-vehicleId.resources/examples
+order: 1000

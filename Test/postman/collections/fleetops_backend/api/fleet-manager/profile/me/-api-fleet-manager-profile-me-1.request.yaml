@@ -1,0 +1,25 @@
+$kind: http-request
+name: /api/fleet-manager/profile/me
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/profile/me"
+method: PUT
+headers:
+  Content-Type: multipart/form-data
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: string
+      description: ""
+    - type: text
+      key: Email
+      value: string
+      description: ""
+    - type: file
+      key: ProfilePhoto
+      src: ""
+      description: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-profile-me-1.resources/examples
+order: 2000

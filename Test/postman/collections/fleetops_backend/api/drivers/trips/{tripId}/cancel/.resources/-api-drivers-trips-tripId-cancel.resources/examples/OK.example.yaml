@@ -1,0 +1,21 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/drivers/trips/:tripId/cancel"
+  method: PATCH
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    tripId: "183"
+  body:
+    type: json
+    content: |-
+      {
+        "driverId": 317
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fleet-manager/assignments"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "vehicleId": {{vehicleId}},
+      "driverId": {{driverId}}
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      // Folder 7 melepas driver dari kendaraan lewat DELETE .../driver dan tidak
+      // memasangnya kembali. Tanpa langkah ini, run berikutnya gagal start trip
+      // karena driver tidak punya kendaraan — 14 request sesudahnya ikut merah.
+      pm.test('driver kembali terpasang ke kendaraan', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

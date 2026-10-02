@@ -1,0 +1,60 @@
+$kind: http-request
+name: /api/fleet-manager/vehicles/:vehicleId/maintenances
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/vehicles/:vehicleId/maintenances"
+method: POST
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: vehicleId
+    value: "{{vehicleId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "jenis": "string",
+      "tanggalJadwal": "1982-04-17",
+      "targetOdometer": 4950,
+      "catatan": "string"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "jenis": {
+          "type": "string"
+        },
+        "tanggalJadwal": {
+          "type": "string",
+          "format": "date"
+        },
+        "targetOdometer": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "catatan": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jenis"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-fleet-manager-vehicles-vehicleId-maintenances.resources/examples
+order: 1000

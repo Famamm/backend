@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fleet-manager/vehicles/{{vehicleId}}/maintenances"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "jenis": "Servis rutin ZZ",
+      "targetOdometer": 999999,
+      "catatan": "ZZ tes otomatis"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 201', () => pm.response.to.have.status(201));
+      const d = pm.response.json();
+      pm.test('dapat maintenance id', () => pm.expect(d.data.id).to.be.a('number'));
+      pm.test('status Scheduled', () => pm.expect(d.data.status).to.eql('Scheduled'));
+      pm.environment.set('tmpMaintenanceId', d.data.id);
+    language: text/javascript
+order: 12000

@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/drivers/inspections/driver/:driverId
+description: ""
+url: "{{baseUrl}}/api/drivers/inspections/driver/:driverId"
+method: GET
+pathVariables:
+  - key: driverId
+    value: "{{driverId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-inspections-driver-driverId.resources/examples
+order: 1000

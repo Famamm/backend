@@ -1,0 +1,36 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/drivers/trips/:tripId/gps"
+  method: POST
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    tripId: "183"
+  body:
+    type: json
+    content: |-
+      {
+        "points": [
+          {
+            "clientId": "a52e38ad-1982-6671-7cb3-e1254ff233ca",
+            "latitude": 7640.459179729273,
+            "longitude": 2181.889419608591,
+            "capturedAt": "1959-09-10T16:21:40.239Z",
+            "accuracyMeters": 6268.129182336794
+          },
+          {
+            "clientId": "502edf39-98e8-4421-4311-64e055554f80",
+            "latitude": 8488.702827511177,
+            "longitude": 1864.2002723780238,
+            "capturedAt": "1988-02-17T00:12:44.447Z",
+            "accuracyMeters": 285.747027693356
+          }
+        ]
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

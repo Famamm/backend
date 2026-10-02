@@ -1,0 +1,230 @@
+@fleetops_backend_HostAddress = http://localhost:5107
+@existingDriverId = 1
+@existingVehicleId = 1
+@existingInspectionId = 1
+@existingTripId = 1
+### ============================================
+### INSPECTION FLOW
+### ============================================
+### 
+### STEP 1: Get Inspection Items untuk ditampilkan di frontend
+### Endpoint ini mengembalikan daftar item yang perlu diinspeksi
+### Frontend akan menampilkan setiap item dengan 2 tombol: "Ok" dan "Tidak"
+###
+
+### 1.1 Get All Inspection Items
+GET {{fleetops_backend_HostAddress}}/api/inspections/items
+Content-Type: application/json
+
+### ============================================
+### STEP 2: User menginput hasil inspeksi
+### ============================================
+### 
+### Flow di frontend:
+### - Loop setiap item dari GET /api/inspections/items
+### - User klik "Ok" → Condition = 1
+### - User klik "Tidak" → Condition = 0 (dan user upload photo + catatan)
+### - Submit semua hasil ke POST /api/inspections/create
+###
+### Contoh scenario:
+### - Item 1 (Ban) → User klik Ok (Condition = 1)
+### - Item 2 (Lampu) → User klik Tidak (Condition = 0), upload photo, tambah catatan
+### - Item 3 (Rem) → User klik Ok (Condition = 1)
+###
+
+### 2.1 Create Inspection - Semua Item Ok (tidak ada photo/catatan)
+POST {{fleetops_backend_HostAddress}}/api/inspections/create
+Content-Type: application/json
+
+{
+  "driverId": {{existingDriverId}},
+  "vehicleId": {{existingVehicleId}},
+  "results": [
+    {
+      "itemId": 1,
+      "condition": 1,
+      "note": null,
+      "photoIndex": null
+    },
+    {
+      "itemId": 2,
+      "condition": 1,
+      "note": null,
+      "photoIndex": null
+    },
+    {
+      "itemId": 3,
+      "condition": 1,
+      "note": null,
+      "photoIndex": null
+    }
+  ],
+  "photos": []
+}
+
+### 2.2 Create Inspection - Ada Item Tidak Ok dengan Photo + Catatan
+POST {{fleetops_backend_HostAddress}}/api/inspections/create
+Content-Type: multipart/form-data; boundary=----FormBoundary7MA4YWxkTrZu0gW
+
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="VehicleId"
+
+{{existingVehicleId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].ItemId"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].Condition"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].ItemId"
+
+2
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].Condition"
+
+0
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].Note"
+
+Lampu rusak, perlu diganti
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].PhotoIndex"
+
+0
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[2].ItemId"
+
+3
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[2].Condition"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Photos"; filename="broken-light.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+------FormBoundary7MA4YWxkTrZu0gW--
+
+### 2.3 Create Inspection - Multiple Item Tidak Ok dengan Multiple Photos
+POST {{fleetops_backend_HostAddress}}/api/inspections/create
+Content-Type: multipart/form-data; boundary=----FormBoundary7MA4YWxkTrZu0gW
+
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="VehicleId"
+
+{{existingVehicleId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].ItemId"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].Condition"
+
+0
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].Note"
+
+Ban kempes
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].PhotoIndex"
+
+0
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].ItemId"
+
+2
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].Condition"
+
+0
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].Note"
+
+Lampu depan mati
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[1].PhotoIndex"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[2].ItemId"
+
+3
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[2].Condition"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Photos"; filename="flat-tire.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Photos"; filename="dead-light.jpg"
+Content-Type: image/jpeg
+
+< ./test-image.jpg
+------FormBoundary7MA4YWxkTrZu0gW--
+
+### ============================================
+### GET INSPECTION RESULTS
+### ============================================
+
+### 3.1 Get Inspection by ID
+GET {{fleetops_backend_HostAddress}}/api/inspections/{{existingInspectionId}}
+Content-Type: application/json
+
+### 3.2 Get All Inspections by Driver
+GET {{fleetops_backend_HostAddress}}/api/inspections/driver/{{existingDriverId}}
+Content-Type: application/json
+
+### 3.3 Get All Inspections by Vehicle
+GET {{fleetops_backend_HostAddress}}/api/inspections/vehicle/{{existingVehicleId}}
+Content-Type: application/json
+
+### 3.4 Get Today's Inspections
+GET {{fleetops_backend_HostAddress}}/api/inspections/today
+Content-Type: application/json
+
+### ============================================
+### UPDATE & DELETE
+### ============================================
+
+### 4.1 Update Inspection
+PUT {{fleetops_backend_HostAddress}}/api/inspections/{{existingInspectionId}}
+Content-Type: multipart/form-data; boundary=----FormBoundary7MA4YWxkTrZu0gW
+
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="DriverId"
+
+{{existingDriverId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="VehicleId"
+
+{{existingVehicleId}}
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].ItemId"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="Results[0].Condition"
+
+1
+------FormBoundary7MA4YWxkTrZu0gW--
+
+### 4.2 Delete Inspection
+DELETE {{fleetops_backend_HostAddress}}/api/inspections/{{existingInspectionId}}
+Content-Type: application/json
+
+

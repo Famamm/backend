@@ -1,0 +1,56 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/drivers/fuel"
+  method: POST
+  headers:
+    Content-Type: multipart/form-data
+  body:
+    type: formdata
+    content:
+      - type: text
+        key: VehicleId
+        value: "6683"
+        description: ""
+      - type: text
+        key: FuelType
+        value: string
+        description: ""
+      - type: text
+        key: JmlLiter
+        value: "6429.7089145106265"
+        description: ""
+      - type: text
+        key: HargaTotal
+        value: "128"
+        description: ""
+      - type: text
+        key: OdometerIsi
+        value: "3668"
+        description: ""
+      - type: text
+        key: Catatan
+        value: string
+        description: ""
+      - type: file
+        key: FuelPhoto
+        src: ""
+        description: ""
+      - type: text
+        key: Latitude
+        value: "1425.10841314344"
+        description: ""
+      - type: text
+        key: Longitude
+        value: "5530.7000024314175"
+        description: ""
+      - type: text
+        key: AccuracyMeters
+        value: "5179.124492845926"
+        description: ""
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

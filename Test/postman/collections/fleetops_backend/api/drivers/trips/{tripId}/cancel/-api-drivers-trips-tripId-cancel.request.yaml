@@ -1,0 +1,47 @@
+$kind: http-request
+name: /api/drivers/trips/:tripId/cancel
+description: ""
+url: "{{baseUrl}}/api/drivers/trips/:tripId/cancel"
+method: PATCH
+headers:
+  Content-Type: application/json
+pathVariables:
+  - key: tripId
+    value: "{{tripId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: json
+  content: |-
+    {
+      "driverId": 317
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "driverId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "required": [
+        "driverId"
+      ]
+    }
+settings: {}
+examples: ./.resources/-api-drivers-trips-tripId-cancel.resources/examples
+order: 1000

@@ -1,0 +1,40 @@
+$kind: http-request
+name: /api/fleet-manager/statistics
+description: Statistik bulanan. Sesuaikan bulan (1-12) dan tahun.
+url: "{{baseUrl}}/api/fleet-manager/statistics?bulan=9&tahun=2026"
+method: GET
+queryParams:
+  - key: bulan
+    value: "9"
+    disabled: false
+    description: Bulan (1-12)
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+  - key: tahun
+    value: "2026"
+    disabled: false
+    description: Tahun
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-statistics.resources/examples
+order: 1000

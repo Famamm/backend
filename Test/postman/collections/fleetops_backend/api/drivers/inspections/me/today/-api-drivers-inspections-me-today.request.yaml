@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/inspections/me/today
+description: ""
+url: "{{baseUrl}}/api/drivers/inspections/me/today"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-inspections-me-today.resources/examples
+order: 1000

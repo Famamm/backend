@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/drivers/trips/:tripId
+description: ""
+url: "{{baseUrl}}/api/drivers/trips/:tripId"
+method: GET
+pathVariables:
+  - key: tripId
+    value: "{{tripId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-trips-tripId.resources/examples
+order: 4000

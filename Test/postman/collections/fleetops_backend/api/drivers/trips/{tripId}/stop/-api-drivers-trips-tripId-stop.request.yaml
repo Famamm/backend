@@ -1,0 +1,63 @@
+$kind: http-request
+name: /api/drivers/trips/:tripId/stop
+description: ""
+url: "{{baseUrl}}/api/drivers/trips/:tripId/stop"
+method: PATCH
+headers:
+  Content-Type: multipart/form-data
+pathVariables:
+  - key: tripId
+    value: "{{tripId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: formdata
+  content:
+    - type: text
+      key: DriverId
+      value: "1151"
+      description: ""
+    - type: file
+      key: Image
+      src: ""
+      description: ""
+    - type: text
+      key: VehicleId
+      value: "9726"
+      description: ""
+    - type: text
+      key: LokasiAkhir
+      value: string
+      description: ""
+    - type: text
+      key: KordAkhirLatitude
+      value: "7217.559553085631"
+      description: ""
+    - type: text
+      key: KordAkhirLongitude
+      value: "9122.002616574564"
+      description: ""
+    - type: text
+      key: OdometerAkhir
+      value: "8622"
+      description: ""
+    - type: text
+      key: Catatan
+      value: string
+      description: ""
+settings: {}
+examples: ./.resources/-api-drivers-trips-tripId-stop.resources/examples
+order: 1000

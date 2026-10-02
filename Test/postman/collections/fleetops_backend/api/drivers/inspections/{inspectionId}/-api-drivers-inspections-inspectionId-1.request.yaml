@@ -1,0 +1,47 @@
+$kind: http-request
+name: /api/drivers/inspections/:inspectionId
+description: ""
+url: "{{baseUrl}}/api/drivers/inspections/:inspectionId"
+method: PUT
+headers:
+  Content-Type: multipart/form-data
+pathVariables:
+  - key: inspectionId
+    value: "{{inspectionId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: formdata
+  content:
+    - type: text
+      key: DriverId
+      value: "4205"
+      description: ""
+    - type: text
+      key: VehicleId
+      value: "2054"
+      description: ""
+    - type: text
+      key: Results
+      value: "[object Object],[object Object]"
+      description: ""
+    - type: text
+      key: Photos
+      value: string,string
+      description: ""
+settings: {}
+examples: ./.resources/-api-drivers-inspections-inspectionId-1.resources/examples
+order: 2000

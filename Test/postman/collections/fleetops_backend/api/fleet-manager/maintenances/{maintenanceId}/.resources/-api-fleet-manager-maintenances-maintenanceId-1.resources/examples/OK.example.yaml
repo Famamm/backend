@@ -1,0 +1,24 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/fleet-manager/maintenances/:maintenanceId"
+  method: PUT
+  headers:
+    Content-Type: application/json
+  pathVariables:
+    maintenanceId: "183"
+  body:
+    type: json
+    content: |-
+      {
+        "jenis": "string",
+        "tanggalJadwal": "1982-04-17",
+        "targetOdometer": 4950,
+        "catatan": "string"
+      }
+response:
+  statusCode: 200
+  statusText: OK
+  body:
+    type: text
+    content: ""
+order: 1000

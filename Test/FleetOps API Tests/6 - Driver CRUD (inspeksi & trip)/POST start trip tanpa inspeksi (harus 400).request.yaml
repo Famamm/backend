@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/trips"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "driverId": {{loggedDriverId}},
+      "vehicleId": {{vehicleId}},
+      "lokasiAwal": "Pasuruan",
+      "odometerAwal": 15000
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('ditolak 400 - wajib inspeksi dulu', () => pm.response.to.have.status(400));
+      pm.test('pesan menyebut inspection', () => pm.expect(pm.response.text().toLowerCase()).to.include('inspection'));
+    language: text/javascript
+order: 2000

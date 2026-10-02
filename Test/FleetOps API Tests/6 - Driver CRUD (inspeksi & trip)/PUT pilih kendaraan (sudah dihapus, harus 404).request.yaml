@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/profile/me/vehicle"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "vehicleId": {{vehicleId}}
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      // Sejak Sprint 3 driver tidak boleh memilih kendaraan sendiri — yang
+      // menentukan adalah Fleet Manager lewat POST /api/fleet-manager/assignments.
+      // Endpoint ini sengaja dihapus, jadi 404 adalah hasil yang benar.
+      pm.test('endpoint pilih kendaraan sendiri sudah dihapus 404', () => pm.response.to.have.status(404));
+    language: text/javascript
+order: 1000

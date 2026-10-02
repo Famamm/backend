@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.vs
+.vscode
+*.sln.iml
+*.user
+
+# Build artifacts (akan di-rebuild)
+bin
+obj
+
+# Logs
+*.log
+
+# Environment files (production config via env vars)
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in Docker)
+*.md
+README.md
+
+# Development tools
+dotnet-tools.json
+
+# Local HTTP files
+*.http

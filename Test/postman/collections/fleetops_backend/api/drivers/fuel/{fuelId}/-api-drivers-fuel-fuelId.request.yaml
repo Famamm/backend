@@ -1,0 +1,29 @@
+$kind: http-request
+name: /api/drivers/fuel/:fuelId
+description: ""
+url: "{{baseUrl}}/api/drivers/fuel/:fuelId"
+method: GET
+pathVariables:
+  - key: fuelId
+    value: "{{fuelId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-fuel-fuelId.resources/examples
+order: 1000

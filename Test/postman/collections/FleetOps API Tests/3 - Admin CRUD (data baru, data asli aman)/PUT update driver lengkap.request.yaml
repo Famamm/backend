@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{baseUrl}}/api/admin/drivers/{{tmpDriverId}}"
+method: PUT
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: ZZ Driver EDITED
+    - type: text
+      key: Address
+      value: Malang
+    - type: text
+      key: JenisLisensi
+      value: SIM B1
+    - type: text
+      key: TanggalBerlaku
+      value: 2027-12-31
+    - type: text
+      key: Status
+      value: Active
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 5000

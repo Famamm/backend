@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/drivers/trips/{{tmpTripId}}/gps"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "points": [
+        {
+          "clientId": "{{$guid}}",
+          "latitude": -7.2460,
+          "longitude": 112.7330,
+          "capturedAt": "{{$isoTimestamp}}"
+        }
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('ditolak rate limit 429', () => pm.response.to.have.status(429));
+    language: text/javascript
+order: 9000

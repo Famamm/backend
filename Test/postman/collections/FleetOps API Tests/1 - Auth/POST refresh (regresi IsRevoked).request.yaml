@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/refresh"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "refreshToken": "{{adminRefreshToken}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200 (bukan 500 - regresi IsRevoked)', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('dapat accessToken baru', () => pm.expect(d.accessToken).to.be.a('string'));
+      pm.test('dapat refreshToken baru', () => pm.expect(d.refreshToken).to.be.a('string'));
+      pm.environment.set('token', d.accessToken);
+      pm.environment.set('rotatedRefreshToken', d.refreshToken);
+    language: text/javascript
+order: 2000

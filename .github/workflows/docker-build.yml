@@ -1,0 +1,63 @@
+name: Docker Build
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+env:
+  IMAGE_NAME: ${{ vars.DOCKERHUB_IMAGE || 'fleetopsapp/fleetops-api' }}
+  IMAGE_TAG: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image for pull requests
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          build-args: |
+            Jwt__Key=${{ secrets.Jwt__Key }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:pr-${{ github.event.pull_request.number }}
+
+      - name: Build and push image for develop pushes
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          build-args: |
+            API_PORT=${{ vars.API_PORT || '5144' }}
+            API_ENVIRONMENT=${{ github.ref_name == 'main' && 'Production' || vars.API_ENVIRONMENT || 'Development' }}
+            Jwt__Key=${{ secrets.JWT__KEY }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            ${{ env.IMAGE_NAME }}:dev

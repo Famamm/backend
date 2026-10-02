@@ -1,0 +1,20 @@
+$kind: http-request
+name: Login admin lagi untuk cleanup
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "identity": "{{adminUser}}",
+      "password": "{{adminPass}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      pm.environment.set('token', pm.response.json().accessToken);
+    language: text/javascript
+order: 9000

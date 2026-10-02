@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/fleet-manager/vehicles/maintenance-status
+description: ""
+url: "{{baseUrl}}/api/fleet-manager/vehicles/maintenance-status"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-fleet-manager-vehicles-maintenance-status.resources/examples
+order: 1000

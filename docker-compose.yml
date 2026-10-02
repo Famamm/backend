@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgis/postgis:latest
+    container_name: ${DB_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fleetops_network
+
+  api:
+    image: ${DOCKERHUB_IMAGE}:${APP_IMAGE_TAG}
+    container_name: ${API_CONTAINER_NAME}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${API_ENVIRONMENT}
+      ASPNETCORE_URLS: http://+:${API_PORT}
+      GPS_BATCH_INTERVAL_SECONDS: ${GPS_BATCH_INTERVAL_SECONDS:-5}
+      Jwt__Key: ${Jwt__Key}
+      Jwt__Issuer: ${Jwt__Issuer}
+      Jwt__Audience: ${Jwt__Audience}
+      Jwt__AccessTokenExpireMinutes: ${Jwt__AccessTokenExpireMinutes}
+      Jwt__RefreshTokenExpireDays: ${Jwt__RefreshTokenExpireDays}
+      SwaggerAuth__Username: ${SwaggerAuth__Username}
+      SwaggerAuth__Password: ${SwaggerAuth__Password}
+      Cloudinary__CloudName: ${Cloudinary__CloudName}
+      Cloudinary__ApiKey: ${Cloudinary__ApiKey}
+      Cloudinary__ApiSecret: ${Cloudinary__ApiSecret}
+      MaintenanceReminder__ReminderDays__0: ${MaintenanceReminder__ReminderDays__0:-7}
+      MaintenanceReminder__ReminderDays__1: ${MaintenanceReminder__ReminderDays__1:-3}
+      MaintenanceReminder__ReminderDays__2: ${MaintenanceReminder__ReminderDays__2:-1}
+      MaintenanceReminder__KmBefore: ${MaintenanceReminder__KmBefore:-500}
+      MaintenanceReminder__ScanIntervalMinutes: ${MaintenanceReminder__ScanIntervalMinutes:-1440}
+      ConnectionStrings__DefaultConnection: "Host=db;Port=${DB_PORT};Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};SSL Mode=Prefer;"
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - fleetops_network
+
+volumes:
+  postgres_data:
+
+networks:
+  fleetops_network:
+    driver: bridge

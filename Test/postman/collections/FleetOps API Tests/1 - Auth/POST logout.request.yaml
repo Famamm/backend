@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/logout"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "refreshToken": "{{rotatedRefreshToken}}"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200 (bukan 500)', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

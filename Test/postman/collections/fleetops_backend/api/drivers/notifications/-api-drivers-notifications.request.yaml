@@ -1,0 +1,26 @@
+$kind: http-request
+name: /api/drivers/notifications
+description: ""
+url: "{{baseUrl}}/api/drivers/notifications?unreadOnly=false"
+method: GET
+queryParams:
+  - key: unreadOnly
+    value: "false"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      }
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-notifications.resources/examples
+order: 1000

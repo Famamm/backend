@@ -1,0 +1,99 @@
+@fleetops_backend_HostAddress = http://localhost:5107
+
+### ============================================
+### AUTH WITH REFRESH TOKEN
+### ============================================
+
+### 1. LOGIN - Dapatkan Access Token dan Refresh Token
+POST {{fleetops_backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "wkwk@gmail.com",
+  "password": "wkwkwkwk"
+}
+
+### Response akan berisi:
+### {
+###   "accessToken": "eyJhbGc...",
+###   "refreshToken": "base64string...",
+###   "expiresIn": 900,  // dalam detik (15 menit)
+###   "user": {
+###     "id": 1,
+###     "fullName": "Fit",
+###     "email": "wkwk@gmail.com",
+###     "roleName": "Driver"
+###   }
+### }
+
+### 2. REGISTER - Register User Baru
+POST {{fleetops_backend_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "newuser@gmail.com",
+  "password": "password123"
+}
+
+### 3. REFRESH TOKEN - Dapatkan Access Token Baru
+### Gunakan refresh token dari login response
+POST {{fleetops_backend_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "paste_refresh_token_here"
+}
+
+### Response:
+### {
+###   "accessToken": "new_access_token",
+###   "refreshToken": "new_refresh_token",
+###   "expiresIn": 900
+### }
+
+### 4. LOGOUT - Revoke Satu Refresh Token
+### Perlu Authorization header dengan access token
+POST {{fleetops_backend_HostAddress}}/api/auth/logout
+Content-Type: application/json
+Authorization: Bearer paste_access_token_here
+
+{
+  "refreshToken": "paste_refresh_token_here"
+}
+
+### 5. LOGOUT ALL DEVICES - Logout dari Semua Device
+### Revoke semua refresh token milik user
+POST {{fleetops_backend_HostAddress}}/api/auth/logout-all
+Content-Type: application/json
+Authorization: Bearer paste_access_token_here
+
+{}
+
+### ============================================
+### FLOW PENGGUNAAN DI FRONTEND
+### ============================================
+###
+### 1. User login:
+###    POST /api/auth/login
+###    → Simpan accessToken di memory/state (jangan localStorage untuk security)
+###    → Simpan refreshToken di httpOnly cookie atau secure storage
+###
+### 2. Setiap request API:
+###    Authorization: Bearer {accessToken}
+###
+### 3. Jika dapat 401 Unauthorized:
+###    → Gunakan refreshToken untuk get access token baru
+###    → POST /api/auth/refresh dengan refreshToken
+###    → Update accessToken
+###    → Retry request awal
+###
+### 4. Saat user logout:
+###    → POST /api/auth/logout dengan refreshToken
+###    → Hapus accessToken dari memory
+###    → Hapus refreshToken dari storage
+###    → Redirect ke login page
+###
+### 5. Logout dari semua device:
+###    → POST /api/auth/logout-all (dengan auth header)
+###    → Revoke semua refresh tokens
+###    → Logout dari semua device

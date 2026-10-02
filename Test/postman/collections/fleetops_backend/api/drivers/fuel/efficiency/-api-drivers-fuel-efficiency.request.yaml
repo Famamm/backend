@@ -1,0 +1,11 @@
+$kind: http-request
+name: /api/drivers/fuel/efficiency
+description: ""
+url: "{{baseUrl}}/api/drivers/fuel/efficiency"
+method: GET
+body:
+  type: text
+  content: ""
+settings: {}
+examples: ./.resources/-api-drivers-fuel-efficiency.resources/examples
+order: 1000

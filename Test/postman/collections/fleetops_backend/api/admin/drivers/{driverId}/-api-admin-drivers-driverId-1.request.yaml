@@ -1,0 +1,67 @@
+$kind: http-request
+name: /api/admin/drivers/:driverId
+description: ""
+url: "{{baseUrl}}/api/admin/drivers/:driverId"
+method: PUT
+headers:
+  Content-Type: multipart/form-data
+pathVariables:
+  - key: driverId
+    value: "{{driverId}}"
+    disabled: false
+    description: ""
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+body:
+  type: formdata
+  content:
+    - type: text
+      key: FullName
+      value: string
+      description: ""
+    - type: text
+      key: Email
+      value: string
+      description: ""
+    - type: text
+      key: Password
+      value: string
+      description: ""
+    - type: text
+      key: Address
+      value: string
+      description: ""
+    - type: file
+      key: ProfilePhotoFile
+      src: ""
+      description: ""
+    - type: text
+      key: JenisLisensi
+      value: string
+      description: ""
+    - type: file
+      key: FotoLisensiFile
+      src: ""
+      description: ""
+    - type: text
+      key: TanggalBerlaku
+      value: 1979-03-16T19:56:24.311Z
+      description: ""
+    - type: text
+      key: Status
+      value: string
+      description: ""
+settings: {}
+examples: ./.resources/-api-admin-drivers-driverId-1.resources/examples
+order: 2000

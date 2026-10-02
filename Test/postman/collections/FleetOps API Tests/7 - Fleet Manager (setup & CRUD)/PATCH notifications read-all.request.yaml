@@ -1,0 +1,8 @@
+$kind: http-request
+url: "{{baseUrl}}/api/fleet-manager/notifications/read-all"
+method: PATCH
+scripts:
+  - type: afterResponse
+    code: pm.test('status 200', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 23000

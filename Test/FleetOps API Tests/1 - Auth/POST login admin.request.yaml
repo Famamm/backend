@@ -1,0 +1,24 @@
+$kind: http-request
+url: "{{baseUrl}}/api/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "identity": "{{adminUser}}",
+      "password": "{{adminPass}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('status 200', () => pm.response.to.have.status(200));
+      const d = pm.response.json();
+      pm.test('dapat accessToken', () => pm.expect(d.accessToken).to.be.a('string'));
+      pm.test('dapat refreshToken', () => pm.expect(d.refreshToken).to.be.a('string'));
+      pm.test('role Admin', () => pm.expect(d.user.roleName).to.eql('Admin'));
+      pm.environment.set('token', d.accessToken);
+      pm.environment.set('adminRefreshToken', d.refreshToken);
+    language: text/javascript
+order: 1000
